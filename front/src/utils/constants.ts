@@ -1,0 +1,27 @@
+const fontFamilies = [
+  "Arial",
+  "Courier New",
+  "Georgia",
+  "Helvetica",
+  "Times New Roman",
+  "Verdana",
+  "Impact",
+  "Comic Sans MS",
+  "Lucida Sans Unicode",
+  "Tahoma",
+  "Trebuchet MS",
+  "Palatino Linotype",
+  "Garamond",
+  "Frank Ruhl Libre",
+  "Roboto",
+  "Open Sans",
+  "Lato",
+  "Droid Sans",
+  "Montserrat",
+  "Raleway",
+  "Noto Sans",
+  "Ubuntu",
+  "Fira Sans",
+];
+
+export default fontFamilies;

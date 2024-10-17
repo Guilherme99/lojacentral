@@ -1,0 +1,54 @@
+version: "1.0"
+
+services:
+  postgres:
+    container_name: postgres-loja-central
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=adm123
+      - POSTGRES_DB=lojacentral
+    ports:
+      - 5432:5432
+    volumes:
+      - /media/guilherme/ArquivosLinux/pgdatacentral:/var/lib/postgresql/data
+
+  api-python:
+    restart: always
+    build:
+      context: ../
+      dockerfile: docker/DockerfilePython
+    ports:
+      - 5000:5000
+    depends_on:
+      - postgres
+
+  api-java:
+    restart: always
+    build:
+      context: ../
+      dockerfile: docker/DockerfileJava
+    ports:
+      - 8080:8080
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/lojacentral?useTimezone=true&serverTimeZone=America/Sao_Paulo
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=adm123
+    depends_on:
+      - postgres
+      - api-python
+
+  lojacentral_frontend:
+    container_name: lojacentral-frontend
+    restart: always
+    build:
+      context: ..
+      dockerfile: docker/DockerfileFront
+    ports:
+      - 4300:4300
+    stdin_open: true
+    depends_on:
+      - postgres
+      - api-python
+      - api-java

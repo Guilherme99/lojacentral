@@ -1,0 +1,15 @@
+FROM node:20.17.0-alpine
+
+WORKDIR /app
+
+COPY .front/*.lock /app/
+
+RUN yarn set version 1.22.21
+
+RUN yarn install 
+
+COPY ./front /app/
+
+EXPOSE 4300
+
+CMD ["yarn", "dev"]

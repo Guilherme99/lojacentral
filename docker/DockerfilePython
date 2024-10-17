@@ -1,0 +1,17 @@
+FROM python
+
+# Instala as dependências necessárias, incluindo a biblioteca libgl1
+RUN apt-get update && apt-get install -y libgl1
+
+# Define o diretório de trabalho
+WORKDIR /app
+
+# Copia o restante do código-fonte para o diretório de trabalho
+COPY ./back/py /app
+
+# Instala as dependências do Python
+RUN pip install -r requirements.txt
+
+EXPOSE 5000
+# Define o comando de execução
+CMD ["python3", "app.py"]
