@@ -40,6 +40,13 @@ spring:
     path: /swagger-ui.html
     clientId: "153"
     clientSecret: "123123"
+
+  # Redis
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
 # Server Configuration
 server:
   port: 8080
@@ -49,3 +56,5 @@ api:
   security:
     token:
       secret: ${JWT_SECRET:my-secret-key}
+      expiration: ${JWT_EXPIRATION:60000}
+      refreshExpiration: ${JWT_REFRESH_EXPIRATION:2592000000}

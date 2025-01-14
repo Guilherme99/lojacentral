@@ -44,8 +44,8 @@ function NavBar() {
         >
           <Container>
             <Navbar.Brand as={Link} to={"/"}>
-              <Image src={Logo} roundedCircle width={100} />
-              <SpanLogin>Loja Central</SpanLogin>
+              {/* <Image src={Logo} roundedCircle width={100} /> */}
+              <SpanLogin>SINTRAF</SpanLogin>
             </Navbar.Brand>
             <Navbar.Toggle aria-controls="responsive-navbar-nav" />
             <Navbar.Collapse id="responsive-navbar-nav">

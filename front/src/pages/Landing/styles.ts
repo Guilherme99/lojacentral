@@ -1,16 +1,16 @@
 import { stitches } from "../../styles/stitches.config";
 import { Row } from "react-bootstrap";
-import BgImage from "../../assets/images/bg.png";
+import BgImage from "../../assets/images/bg.jpg";
 
 export const RowWithBg = stitches.styled(Row, {
-  backgroundImage: `url(${BgImage})`, // Make sure to provide the correct path to your image
+  // backgroundImage: `url(${BgImage})`, // Make sure to provide the correct path to your image
   backgroundPosition: "center",
   backgroundRepeat: "no-repeat",
   width: "100vw",
   height: "90vh",
-  backgroundPositionY: "140px",
-  backgroundSize: "contain",
-  paddingLeft: "130px",
+  // backgroundPositionY: "140px",
+  backgroundSize: "cover",
+  // paddingLeft: "130px",
   margin: 0,
 });
 

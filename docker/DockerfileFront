@@ -2,7 +2,7 @@ FROM node:20.17.0-alpine
 
 WORKDIR /app
 
-COPY .front/*.lock /app/
+COPY ./front/*.lock /app/
 
 RUN yarn set version 1.22.21
 

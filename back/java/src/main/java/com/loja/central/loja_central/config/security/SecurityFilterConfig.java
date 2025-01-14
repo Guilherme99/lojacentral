@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.loja.central.loja_central.repository.FormularioCadastroRepository;
+import com.loja.central.loja_central.service.AuthServiceRedis;
 import com.loja.central.loja_central.service.token.TokenService;
 
 import jakarta.servlet.FilterChain;
@@ -24,19 +25,38 @@ public class SecurityFilterConfig extends OncePerRequestFilter {
 	TokenService tokenService;
 
 	@Autowired
+    private AuthServiceRedis redisTokenService;
+
+	@Autowired
 	FormularioCadastroRepository userRepository;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws IOException, ServletException {
-		var token = this.recoverToken(request);
+		String token = tokenService.recoverToken(request);
+		String refresh_token = tokenService.recoverRefreshToken(request);
 
 		if (request.getServletPath().contains("/swagger-ui") || request.getServletPath().contains("/v3/api-docs")) {
 			filterChain.doFilter(request, response);
 		} else {
-			if (token != null) {
-				// Boolean validToken = tokenService.isTokenValid(token);
-				var login = tokenService.validateToken(token);
+			
+			if (token != null && redisTokenService.hasAccessToken(token) == false && refresh_token == null) {
+				SecurityContextHolder.clearContext();
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); 
+				response.getWriter().write("Token revogado ou inválido.");
+				return;
+			}
+
+			if (token != null && redisTokenService.hasAccessToken(token)==true) {
+				var login = tokenService.validateAccessToken(token);
+				UserDetails user = userRepository.findByEmail(login);
+
+				var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+				SecurityContextHolder.getContext().setAuthentication(authentication);
+			}
+
+			if (token != null && redisTokenService.hasAccessToken(token)==false && refresh_token != null  && redisTokenService.hasRefreshToken(refresh_token)==true) {
+				var login = tokenService.validateRefreshToken(refresh_token);
 				UserDetails user = userRepository.findByEmail(login);
 
 				var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
@@ -47,12 +67,4 @@ public class SecurityFilterConfig extends OncePerRequestFilter {
 		}
 
 	}
-
-	private String recoverToken(HttpServletRequest request) {
-		var authHeader = request.getHeader("Authorization");
-		if (authHeader == null)
-			return null;
-		return authHeader.replace("Bearer ", "");
-	}
-
 }

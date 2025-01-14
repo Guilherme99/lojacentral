@@ -2,6 +2,7 @@ package com.loja.central.loja_central.controller;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +12,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,8 +27,10 @@ import com.loja.central.loja_central.dto.LoginResponseDTO;
 import com.loja.central.loja_central.exceptions.AppException;
 import com.loja.central.loja_central.model.FormularioCadastro;
 import com.loja.central.loja_central.repository.FormularioCadastroRepository;
+import com.loja.central.loja_central.service.AuthServiceRedis;
 import com.loja.central.loja_central.service.token.TokenService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -38,6 +42,9 @@ public class AuthenticationController {
 
 	@Autowired
 	private TokenService tokenService;
+
+	@Autowired
+	private AuthServiceRedis serviceRedis;
 
 	@Autowired
 	private FormularioCadastroRepository userRepository;
@@ -54,17 +61,19 @@ public class AuthenticationController {
 			var auth = this.authenticationManager.authenticate(usernamePassword);
 
 			List<String> roles = new ArrayList<>();
-			var token = tokenService.generateToken((FormularioCadastro) auth.getPrincipal());
+			var accessToken = tokenService.generateAccessToken((FormularioCadastro) auth.getPrincipal());
+			var refreshToken = tokenService.generateRefreshToken((FormularioCadastro) auth.getPrincipal());
 
 			if (auth.isAuthenticated()) {
 				var newUser = (FormularioCadastro) user;
 				roles.add(newUser.getRole());
 
-				Map<String, Object> responseMap = new HashMap<>();
-				responseMap.put("token", token);
-				responseMap.put("roles", roles);
+				Map<String, Object> responseMap = new LinkedHashMap<>();
 				responseMap.put("email", newUser.getEmail());
 				responseMap.put("name", newUser.getNomeCompleto());
+				responseMap.put("roles", roles);
+				responseMap.put("access_token", accessToken);
+				responseMap.put("refresh_token", refreshToken);
 
 				return ResponseEntity.ok(new LoginResponseDTO(responseMap).obj());
 			} else {
@@ -115,14 +124,53 @@ public class AuthenticationController {
 	}
 
 	@DeleteMapping("/logout")
-	public ResponseEntity logout() {
+	public ResponseEntity logout(HttpServletRequest request) {
 		try {
-			String token = (String) SecurityContextHolder.getContext().getAuthentication().getCredentials();
-			tokenService.revokeToken(token);
+			String token = tokenService.recoverToken(request);
+			String refreshToken = tokenService.recoverRefreshToken(request);
+
+			tokenService.revokeToken(token, refreshToken);
 			SecurityContextHolder.clearContext();
 			return ResponseEntity.ok("Logout realizado com sucesso");
 		} catch (Exception e) {
 			return ResponseEntity.ok("Erro durante o logout");
 		}
 	}
+
+	@PostMapping("/refresh")
+	public ResponseEntity<?> refreshToken(HttpServletRequest request) {
+		String token = tokenService.recoverToken(request);
+		String refreshToken = tokenService.recoverRefreshToken(request);
+		
+		if (refreshToken != null) {
+			// // Recupera o refresh token armazenado no Redis para o email
+			String storedRefreshToken = serviceRedis.getRefreshToken(refreshToken);
+			
+			if(storedRefreshToken != null){
+				var login = tokenService.validateRefreshToken(refreshToken);
+				UserDetails user = userRepository.findByEmail(login);
+				if (storedRefreshToken.equals(user.getUsername())) { 
+				
+					// Gera um novo access token
+					serviceRedis.revokeTokens(token, refreshToken);
+					
+					var accessToken = tokenService.generateAccessToken((FormularioCadastro) user);
+					var newRefreshToken = tokenService.generateRefreshToken((FormularioCadastro) user);
+	
+					Map<String, String> responseMap = new HashMap<>();
+					responseMap.put("access_token", accessToken);
+					responseMap.put("refresh_token", newRefreshToken);
+	
+					return ResponseEntity.ok(responseMap);
+				} else {
+					return ResponseEntity.status(401).body("Refresh Token inválido ou expirado.");
+				}
+			}
+
+			
+		}
+		
+		return ResponseEntity.status(401).body("Refresh Token inválido.");
+	}
+
 }

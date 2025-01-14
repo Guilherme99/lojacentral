@@ -33,8 +33,8 @@ const auth = {
     localStorage.setItem(AUTH, JSON.stringify(authData));
   },
   getToken() {
-    const { token } = JSON.parse(localStorage.getItem(AUTH) as any);
-    return token;
+    const { access_token } = JSON.parse(localStorage.getItem(AUTH) as any);
+    return access_token;
   },
   getExternalId() {
     const { external_id } = JSON.parse(localStorage.getItem(AUTH) as any);
@@ -47,7 +47,8 @@ const auth = {
       localStorage.removeItem(AUTH);
       return api.delete("/auth/logout", {
         headers: {
-          Authorization: storage.token,
+          Authorization: storage?.access_token,
+          "Refresh-Token": storage?.refresh_token,
         },
       });
     }

@@ -15,14 +15,14 @@ const Landing: React.FC = () => {
     <RowWithBg>
       <Col className="d-flex align-items-center justify-content-center">
         <Container>
-          <SpanPoppins>Personalize os</SpanPoppins>
+          <SpanPoppins>Gerencie os seus</SpanPoppins>
           <SpanPoppinsBold>
-            seus mimos <SpanPoppinsOrange>Grátis</SpanPoppinsOrange>
+            documentos com a
+            <SpanPoppinsOrange> nossa plataforma</SpanPoppinsOrange>
           </SpanPoppinsBold>
           <Text>
-            Através do nosso site, ofertamos várias opções para você, cliente,
-            escolher os seus mimos de aniversário. Teste agora mesmo,{" "}
-            <Span>clicando aqui!</Span>
+            Através do nosso site, ofertamos o gerenciamento dos seus documentos
+            e de seus cliente. Teste agora mesmo, <Span>clicando aqui!</Span>
           </Text>
         </Container>
       </Col>

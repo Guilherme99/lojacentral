@@ -9,13 +9,12 @@ const api_py = axios.create({
   },
 });
 
-
 api_py.interceptors.request.use(async (config) => {
   const storedAuth = localStorage.getItem(import.meta.env.VITE_APP_AUTH);
   if (storedAuth) {
-    const { token } = JSON.parse(storedAuth);
-    if (token) {
-      config.headers.Authorization = token;
+    const { access_token } = JSON.parse(storedAuth);
+    if (access_token) {
+      config.headers.Authorization = access_token;
     }
   }
   return config;

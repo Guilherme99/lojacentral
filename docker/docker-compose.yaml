@@ -3,7 +3,7 @@ version: "1.0"
 services:
   postgres:
     container_name: postgres-loja-central
-    image: postgres
+    image: postgres:16
     restart: always
     environment:
       - POSTGRES_USER=postgres
@@ -24,6 +24,22 @@ services:
     depends_on:
       - postgres
 
+  redis:
+    restart: always
+    build:
+      context: ../
+      dockerfile: docker/DockerfileRedis
+    ports:
+      - 6379:6379
+    environment:
+      - REDIS_REPLICATION_MODE=master
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - /media/guilherme/ArquivosLinux/redisdata:/data
+    depends_on:
+      - postgres
+      - api-python
+
   api-java:
     restart: always
     build:
@@ -35,9 +51,14 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/lojacentral?useTimezone=true&serverTimeZone=America/Sao_Paulo
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=adm123
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_EXPIRATION=900000
+      - JWT_REFRESH_EXPIRATION=2592000000
     depends_on:
       - postgres
       - api-python
+      - redis
 
   lojacentral_frontend:
     container_name: lojacentral-frontend
@@ -52,3 +73,4 @@ services:
       - postgres
       - api-python
       - api-java
+      - redis
